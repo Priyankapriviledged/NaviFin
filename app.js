@@ -7,13 +7,13 @@ Researcher:[['Hosting agreement','Uploaded'],['Salary confirmation letter','Not 
 const DEMO_ACCOUNTS={'meera.student':{pass:'Finland2026',persona:'Student'},'arjun.pro':{pass:'Finland2026',persona:'Professional'}};
 const familyModal=document.getElementById('familyModal');
 const PERSONAS={
-Student:{name:'Meera',sub:'Student · Bengaluru → Helsinki',progress:42,
+Student:{name:'Meera',sub:'Student · Helsinki',progress:42,
 steps:[['done','✓','Secure study place','Completed · university admission'],['done','✓','Prepare residence permit','Documents ready · insurance pending'],['','3','Plan finances','Prove roughly €800/month living-cost funds'],['','4','Arrival setup','Identity code · municipality · services']],
 tasks:[[1,'Confirm admission / offer','Done · pathway requirement'],[0,'Arrange required insurance','Before submitting your permit application'],[0,'Prepare proof of funds','~€800/month personal savings, student permit basis'],[0,'Plan post-arrival registration','Based on your city and situation']]},
-Researcher:{name:'Divya',sub:'Researcher · Pune → Espoo',progress:55,
+Researcher:{name:'Divya',sub:'Researcher · Espoo',progress:55,
 steps:[['done','✓','Sign hosting agreement','Completed · with research organisation'],['done','✓','Apply for researcher permit','Submitted · salary meets collective agreement'],['','3','Arrange family permit','For spouse and children, if applicable'],['','4','Arrival setup','Identity code · municipality · services']],
 tasks:[[1,'Sign hosting agreement','Done · basis for researcher permit'],[1,'Confirm salary meets threshold','Done · min. approx €1,463/month in 2026'],[0,'Arrange family residence permit','If relocating with spouse or children'],[0,'Plan post-arrival registration','DVV, tax card, bank, Kela']]},
-Professional:{name:'Arjun',sub:'Professional with family · Chennai → Helsinki',progress:35,
+Professional:{name:'Arjun',sub:'Professional with family · Helsinki',progress:35,
 steps:[['done','✓','Accept job offer','Completed · employer sponsoring permit'],['done','✓','Apply for employment permit','Documents submitted'],['','3','Plan for family','School & daycare research, spouse support'],['','4','Arrival setup','Identity code · municipality · housing']],
 tasks:[[1,'Confirm employment contract & permit basis','Done · employer-sponsored'],[0,'Arrange housing','Before arrival or shortly after'],[0,'Research school and daycare options','For accompanying children'],[0,'Plan post-arrival registration','DVV, tax card, bank, Kela']]}
 };
@@ -94,34 +94,34 @@ return '<div class="rmcard pre" data-stage="'+id+'" onclick="toggleStage(\''+id+
 function studentOverride(family){
 if(!family||!family.living){return{}}
 if(family.living==='alone'){
-return{sub:'Student · Bengaluru → Helsinki',
+return{sub:'Student · Helsinki',
 step3:['','3','Plan finances','Prove roughly €800/month living-cost funds'],
 tasks:[[1,'Confirm admission / offer','Done · pathway requirement'],[0,'Arrange required insurance','Before submitting your permit application'],[0,'Prepare proof of funds','~€800/month personal savings, student permit basis'],[0,'Plan post-arrival registration','Based on your city and situation']]};
 }
 if(family.family==='spouse'){
-return{sub:'Student, relocating with spouse · Bengaluru → Helsinki',
+return{sub:'Student, relocating with spouse · Helsinki',
 step3:['','3','Plan for spouse','Spouse residence permit on family ties, income requirement applies'],
 tasks:[[1,'Confirm admission / offer','Done · pathway requirement'],[0,'Arrange required insurance','Before submitting your permit application'],[0,'Prepare proof of funds','~€800/month personal savings, student permit basis'],[0,'Arrange spouse residence permit','On family ties · income requirement ~€610/month for spouse'],[0,'Plan post-arrival registration','Based on your city and situation']]};
 }
 const ages=(family.ages||[]).join(', ');
-return{sub:'Student with family · Bengaluru → Helsinki',
+return{sub:'Student with family · Helsinki',
 step3:['','3','Plan for family','Spouse and children\u2019s permits, school & daycare research'],
 tasks:[[1,'Confirm admission / offer','Done · pathway requirement'],[0,'Arrange required insurance','Before submitting your permit application'],[0,'Prepare proof of funds','~€800/month personal savings, student permit basis'],[0,'Arrange spouse and children\u2019s residence permits','On family ties · income requirement per family member applies'],[0,'Research school and daycare options','For children aged '+ages],[0,'Plan post-arrival registration','Based on your city and situation']]};
 }
 function professionalOverride(family){
 if(!family||!family.living){return{}}
 if(family.living==='alone'){
-return{sub:'Professional · Chennai → Helsinki',
+return{sub:'Professional · Helsinki',
 step3:['','3','Finalise logistics','Insurance, banking prep and travel booking'],
 tasks:[[1,'Confirm employment contract & permit basis','Done · employer-sponsored'],[0,'Arrange housing','Before arrival or shortly after'],[0,'Plan post-arrival registration','DVV, tax card, bank, Kela']]};
 }
 if(family.family==='spouse'){
-return{sub:'Professional, relocating with spouse · Chennai → Helsinki',
+return{sub:'Professional, relocating with spouse · Helsinki',
 step3:['','3','Plan for spouse','Spouse residence permit and settling-in support'],
 tasks:[[1,'Confirm employment contract & permit basis','Done · employer-sponsored'],[0,'Arrange housing','Before arrival or shortly after'],[0,'Arrange spouse residence permit','Based on your employment permit basis'],[0,'Plan post-arrival registration','DVV, tax card, bank, Kela']]};
 }
 const ages=(family.ages||[]).join(', ');
-return{sub:'Professional with family · Chennai → Helsinki',
+return{sub:'Professional with family · Helsinki',
 step3:['','3','Plan for family','School & daycare research, spouse support'],
 tasks:[[1,'Confirm employment contract & permit basis','Done · employer-sponsored'],[0,'Arrange housing','Before arrival or shortly after'],[0,'Arrange spouse and children\u2019s residence permits','Based on your employment permit basis'],[0,'Research school and daycare options','For children aged '+ages],[0,'Plan post-arrival registration','DVV, tax card, bank, Kela']]};
 }
