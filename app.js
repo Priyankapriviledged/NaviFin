@@ -290,7 +290,42 @@ famBox.innerHTML='<div style="text-align:center;padding:6px 0 4px;">'+
 window.famComplete=function(){
 familyModal.classList.remove('open');
 renderPersona(famPersona,famAnswers);
+document.getElementById('creatingOverlay').classList.add('open');
+setTimeout(function(){
+document.getElementById('creatingOverlay').classList.remove('open');
 setBlur(false);
 showApp();
+},1600);
 };
-function recalc(){alert('Demo: roadmap recalculated from your profile, destination, stage and outstanding tasks.')}function ask(){const i=document.getElementById('question'),q=i.value.trim();if(!q)return;const c=document.getElementById('chat');c.insertAdjacentHTML('beforeend','<div class="bubble user">'+q.replace(/[<>]/g,'')+'</div>');let a='I can break that into a step-by-step relocation task and point you to the official Finnish source. In production, this answer would be generated from a cited, freshness-checked knowledge base.';if(/housing|rent/i.test(q))a='For housing, I would first identify your city, arrival date and budget, then show suitable student or private-rental pathways plus the official guidance relevant to your situation.';if(/permit|visa|immigration/i.test(q))a='For immigration questions, the assistant should retrieve the current Finnish Immigration Service guidance, summarise it in plain language and show the source and date checked.';c.insertAdjacentHTML('beforeend','<div class="bubble">'+a+'</div>');i.value='';c.scrollTop=c.scrollHeight}modal.addEventListener('click',e=>{if(e.target===modal)closeOnboard()});
+function recalc(){alert('Demo: roadmap recalculated from your profile, destination, stage and outstanding tasks.')}
+const CHAT_FUNCTION_URL='https://YOUR-PROJECT-REF.supabase.co/functions/v1/chat-assistant'; // replace with your actual Edge Function URL
+async function ask(){
+const i=document.getElementById('question'),q=i.value.trim();
+if(!q)return;
+const c=document.getElementById('chat');
+c.insertAdjacentHTML('beforeend','<div class="bubble user">'+q.replace(/[<>]/g,'')+'</div>');
+i.value='';
+c.scrollTop=c.scrollHeight;
+const thinkingId='thinking-'+Date.now();
+c.insertAdjacentHTML('beforeend','<div class="bubble" id="'+thinkingId+'">Thinking…</div>');
+c.scrollTop=c.scrollHeight;
+try{
+const res=await fetch(CHAT_FUNCTION_URL,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({question:q,persona:currentPersona})
+});
+const data=await res.json();
+const bubble=document.getElementById(thinkingId);
+if(!res.ok||data.error){
+bubble.textContent="Sorry, I couldn't reach the assistant just now. Please try again.";
+}else{
+bubble.textContent=data.answer;
+}
+}catch(err){
+const bubble=document.getElementById(thinkingId);
+bubble.textContent="Sorry, I couldn't reach the assistant just now. Please try again.";
+}
+c.scrollTop=c.scrollHeight;
+}
+modal.addEventListener('click',e=>{if(e.target===modal)closeOnboard()});
