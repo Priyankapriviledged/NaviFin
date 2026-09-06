@@ -1,10 +1,19 @@
-const signinModal=document.getElementById('signinModal');function openSignin(){signinModal.classList.add('open');document.getElementById('signinError').style.display='none'}function closeSignin(){signinModal.classList.remove('open')}
+const signinModal=document.getElementById('signinModal');function openSignin(){signinModal.classList.add('open');document.getElementById('signinError').style.display='none';document.getElementById('signinNotice').style.display='none'}function closeSignin(){signinModal.classList.remove('open')}
 const DOCUMENTS={
-Professional:[['Employment contract','Uploaded'],['Residence permit application','Not uploaded'],['Insurance certificate','Not uploaded'],['Proof of address (for DVV)','Pending arrival'],['Passport copy','Uploaded']],
-Student:[['Admission letter','Uploaded'],['Proof of funds statement','Not uploaded'],['Insurance certificate','Not uploaded'],['Passport copy','Uploaded']],
-Researcher:[['Hosting agreement','Uploaded'],['Salary confirmation letter','Not uploaded'],['Passport copy','Uploaded']]
+Professional:[['employment-contract','Employment contract'],['residence-permit-application','Residence permit application'],['insurance-certificate','Insurance certificate'],['proof-of-address','Proof of address (for DVV)'],['passport-copy','Passport copy']],
+Student:[['admission-letter','Admission letter'],['proof-of-funds','Proof of funds statement'],['insurance-certificate','Insurance certificate'],['passport-copy','Passport copy']],
+Researcher:[['hosting-agreement','Hosting agreement'],['salary-confirmation','Salary confirmation letter'],['passport-copy','Passport copy']]
 };
-const DEMO_ACCOUNTS={'meera.student':{pass:'Finland2026',persona:'Student'},'arjun.pro':{pass:'Finland2026',persona:'Professional'}};
+const SUPABASE_URL='https://YOUR_PROJECT_REF.supabase.co';
+const SUPABASE_ANON_KEY='YOUR_ANON_KEY';
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+let currentUser=null;
+function getDisplayName(){
+if(!currentUser||!currentUser.email)return 'there';
+const local=currentUser.email.split('@')[0];
+const first=local.split(/[.\-_0-9]+/)[0]||local;
+return first.charAt(0).toUpperCase()+first.slice(1);
+}
 const familyModal=document.getElementById('familyModal');
 const PERSONAS={
 Student:{name:'Meera',sub:'Student · Helsinki',progress:42,
@@ -39,7 +48,11 @@ const b=document.getElementById('navAuthBtn');
 b.textContent='Build my roadmap';
 b.setAttribute('onclick','openSignin()');
 }
-window.logout=function(){showMarketingSite()};
+window.logout=async function(){
+if(sb){try{await sb.auth.signOut();}catch(e){}}
+currentUser=null;
+showMarketingSite();
+};
 function showSkeleton(){
 document.getElementById('heroName').textContent='Building your roadmap…';
 document.getElementById('heroSub').textContent='Personalising for you…';
@@ -132,12 +145,12 @@ const o=t==='Professional'?professionalOverride(family):t==='Student'?studentOve
 const sub=o.sub||p.sub;
 const steps=o.step3?[p.steps[0],p.steps[1],o.step3,p.steps[3]]:p.steps;
 const tasks=o.tasks||p.tasks;
-document.getElementById('heroName').textContent=p.name+"’s Finland roadmap";
+document.getElementById('heroName').textContent=getDisplayName()+"’s Finland roadmap";
 document.getElementById('heroSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
 document.getElementById('heroPill').textContent=p.progress+'% ready';
 document.getElementById('heroProgress').style.width=p.progress+'%';
 document.getElementById('heroSteps').innerHTML=steps.map(s=>'<div class="step"><div class="dot '+s[0]+'">'+s[1]+'</div><div><strong>'+s[2]+'</strong><br><small>'+s[3]+'</small></div></div>').join('');
-document.getElementById('appHeaderName').textContent=p.name+"’s Finland roadmap";
+document.getElementById('appHeaderName').textContent=getDisplayName()+"’s Finland roadmap";
 document.getElementById('appHeaderSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
 document.getElementById('appHeaderPill').textContent=p.progress+'% ready';
 document.getElementById('appHeaderProgress').style.width=p.progress+'%';
@@ -157,6 +170,7 @@ stc.style.display='';
 stc.innerHTML=buildSimpleTaskCards(tasks);
 }
 document.getElementById('documentList').innerHTML=buildDocumentList(t);
+refreshDocumentStatuses();
 showAppTab('roadmap');
 updateProgress();
 }
@@ -165,7 +179,7 @@ renderPersona('Student');
 function buildPhaseTracker(){
 const phases=[['✓','Explore','done'],['✓','Apply','done'],['3','Travel','current'],['4','Activate',''],['5','Integrate','']];
 return phases.map(ph=>{
-const circleStyle=ph[2]==='done'?'background:#dff7f1;color:#087c6d':ph[2]==='current'?'background:var(--blue);color:#fff':'background:#edf3ff;color:var(--blue)';
+const circleStyle=ph[2]==='done'?'background:#dff7f1;color:#087c6d':ph[2]==='current'?'background:var(--blue);color:#fff':'background:#E9F0FA;color:var(--blue)';
 const labelStyle=ph[2]==='current'?'color:var(--ink);font-weight:500':'color:var(--muted)';
 return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px;border-radius:50%;'+circleStyle+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 4px">'+ph[0]+'</div><p style="font-size:10px;margin:0;'+labelStyle+'">'+ph[1]+'</p></div>';
 }).join('');
@@ -173,21 +187,113 @@ return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px
 function buildDocumentList(t){
 const docs=DOCUMENTS[t]||[];
 return docs.map(d=>{
-const done=d[1]==='Uploaded';
-const badgeStyle=done?'background:#e8f8f4;color:#087c6d':'background:#f6f8fb;color:var(--muted)';
-return '<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px">'+
-'<div><p style="margin:0;font-size:14px;font-weight:500">'+d[0]+'</p></div>'+
-'<div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;'+badgeStyle+'">'+d[1]+'</span>'+
-(done?'':'<button class="btn secondary" style="padding:6px 12px;font-size:12px">Upload</button>')+
+const[key,name]=d;
+return '<div class="docRow" data-key="'+key+'" style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px">'+
+'<div><p style="margin:0;font-size:14px;font-weight:500">'+name+'</p></div>'+
+'<div style="display:flex;align-items:center;gap:10px">'+
+'<span class="docStatus" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:#f6f8fb;color:var(--muted)">Checking\u2026</span>'+
+'<button class="btn secondary docUploadBtn" style="padding:6px 12px;font-size:12px" onclick="triggerUpload(\''+key+'\',\''+name.replace(/'/g,"\\'")+'\')">Upload</button>'+
 '</div></div>';
 }).join('');
 }
-function doSignin(){
-const u=document.getElementById('signinUser').value.trim(),p=document.getElementById('signinPass').value.trim(),err=document.getElementById('signinError');
-const acc=DEMO_ACCOUNTS[u];
-if(!u||!p){err.textContent='Enter a username and password.';err.style.display='block';return}
-if(!acc||acc.pass!==p){err.textContent='Incorrect username or password.';err.style.display='block';return}
-err.style.display='none';closeSignin();showSkeleton();setBlur(true);openOnboard()
+async function refreshDocumentStatuses(){
+if(!currentUser||!sb)return;
+const{data,error}=await sb.from('documents').select('doc_key,status').eq('user_id',currentUser.id);
+const statusMap={};
+if(data)data.forEach(r=>{statusMap[r.doc_key]=r.status});
+document.querySelectorAll('.docRow').forEach(row=>{
+const key=row.getAttribute('data-key');
+const status=statusMap[key]||'Not uploaded';
+const done=status==='Uploaded';
+const badge=row.querySelector('.docStatus'),uploadBtn=row.querySelector('.docUploadBtn');
+badge.textContent=status;
+badge.style.background=done?'#e8f8f4':'#f6f8fb';
+badge.style.color=done?'#087c6d':'var(--muted)';
+if(uploadBtn)uploadBtn.style.display=done?'none':'inline-block';
+});
+}
+let pendingUploadKey=null,pendingUploadName=null;
+window.triggerUpload=function(key,name){
+pendingUploadKey=key;pendingUploadName=name;
+document.getElementById('docFileInput').click();
+};
+window.handleFileSelected=async function(e){
+const file=e.target.files[0];
+e.target.value='';
+if(!file||!pendingUploadKey||!currentUser||!sb)return;
+const path=currentUser.id+'/'+pendingUploadKey+'-'+Date.now()+'-'+file.name;
+const row=document.querySelector('.docRow[data-key="'+pendingUploadKey+'"]');
+const badge=row?row.querySelector('.docStatus'):null;
+if(badge)badge.textContent='Uploading\u2026';
+const{error:uploadError}=await sb.storage.from('documents').upload(path,file);
+if(uploadError){
+if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
+return;
+}
+await sb.from('documents').upsert({
+user_id:currentUser.id,
+doc_key:pendingUploadKey,
+doc_name:pendingUploadName,
+file_path:path,
+status:'Uploaded'
+},{onConflict:'user_id,doc_key'});
+refreshDocumentStatuses();
+};
+let authMode='signin';
+function toggleAuthMode(e){
+e.preventDefault();
+authMode=authMode==='signin'?'signup':'signin';
+updateAuthUI();
+}
+function updateAuthUI(){
+const title=document.getElementById('authTitle'),sub=document.getElementById('authSubtitle'),
+btn=document.getElementById('authSubmitBtn'),toggle=document.getElementById('authToggleRow');
+if(authMode==='signup'){
+title.textContent='Create account';
+sub.textContent='Sign up to build your personalised roadmap.';
+btn.textContent='Create account';
+toggle.innerHTML='Already have an account? <a href="#" onclick="toggleAuthMode(event)" style="color:var(--blue);font-weight:600">Sign in</a>';
+}else{
+title.textContent='Sign in';
+sub.textContent='Sign in to view your personalised roadmap.';
+btn.textContent='Sign in';
+toggle.innerHTML='Don\u2019t have an account? <a href="#" onclick="toggleAuthMode(event)" style="color:var(--blue);font-weight:600">Sign up</a>';
+}
+document.getElementById('signinError').style.display='none';
+document.getElementById('signinNotice').style.display='none';
+}
+async function handleAuthSubmit(){
+const email=document.getElementById('signinEmail').value.trim(),
+pass=document.getElementById('signinPass').value.trim(),
+err=document.getElementById('signinError'),
+notice=document.getElementById('signinNotice'),
+btn=document.getElementById('authSubmitBtn');
+err.style.display='none';notice.style.display='none';
+if(!sb){err.textContent='Service unavailable right now. Please refresh and try again.';err.style.display='block';return}
+if(!email||!pass){err.textContent='Enter an email and password.';err.style.display='block';return}
+btn.disabled=true;btn.style.opacity='.6';
+try{
+if(authMode==='signup'){
+const{data,error}=await sb.auth.signUp({email,password:pass});
+if(error){err.textContent=error.message;err.style.display='block';return}
+if(!data.session){
+notice.textContent='Account created \u2014 check your email to confirm, then sign in.';
+notice.style.display='block';
+authMode='signin';updateAuthUI();
+return;
+}
+currentUser=data.user;
+}else{
+const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+if(error){err.textContent=error.message;err.style.display='block';return}
+currentUser=data.user;
+}
+closeSignin();showSkeleton();setBlur(true);openOnboard();
+}catch(e){
+err.textContent='Something went wrong. Please try again.';err.style.display='block';
+}finally{
+btn.disabled=false;btn.style.opacity='1';
+}
 }
 signinModal.addEventListener('click',e=>{if(e.target===signinModal)closeSignin()});
 const modal=document.getElementById('modal');function openOnboard(){modal.classList.add('open')}function closeOnboard(){modal.classList.remove('open')}
@@ -210,7 +316,7 @@ famProg.appendChild(d);
 }
 }
 function famHeader(){
-const first=PERSONAS[famPersona].name;
+const first=getDisplayName();
 return '<p style="font-size:20px;font-weight:500;margin:0 0 6px;">Hi '+first+', let us personalise your roadmap</p><p style="font-size:14px;color:#617387;margin:0 0 20px;line-height:1.6;">A few quick questions so we can tailor your tasks, timelines and family-related steps.</p>';
 }
 function famOptionBtn(label,handler){
@@ -282,7 +388,7 @@ else if(famAnswers.family==='spouse'){note="You and your spouse. We will include
 else{note='You, your spouse and '+(famAnswers.ages.length>1?'kids':'a child')+' aged '+famAnswers.ages.join(', ')+'. We will include family permits, plus school and daycare steps.'}
 famBox.innerHTML='<div style="text-align:center;padding:6px 0 4px;">'+
 '<div style="width:44px;height:44px;border-radius:50%;background:#dff7f1;color:#087c6d;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 16px;">✓</div>'+
-'<p style="font-size:18px;font-weight:500;margin:0 0 8px;">Got it, thanks '+PERSONAS[famPersona].name+'</p>'+
+'<p style="font-size:18px;font-weight:500;margin:0 0 8px;">Got it, thanks '+getDisplayName()+'</p>'+
 '<p style="font-size:14px;color:#617387;line-height:1.6;margin:0 0 22px;">'+note+'</p>'+
 '<button onclick="famComplete()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:750;font-size:14px;cursor:pointer;">Build my roadmap →</button>'+
 '</div>';
@@ -329,3 +435,24 @@ bubble.textContent="Sorry, I couldn't reach the assistant just now. Please try a
 c.scrollTop=c.scrollHeight;
 }
 modal.addEventListener('click',e=>{if(e.target===modal)closeOnboard()});
+
+const NAV_TEXT_HTML='India\u2013Finland';
+const NAV_FLAGS_HTML='<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:-3px">'+
+'<svg width="18" height="12" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0"><rect width="22" height="5" y="0" fill="#FF9933"/><rect width="22" height="5" y="5" fill="#FFFFFF"/><rect width="22" height="5" y="10" fill="#138808"/><circle cx="11" cy="7.5" r="1.8" fill="none" stroke="#000080" stroke-width="0.5"/><circle cx="11" cy="7.5" r="0.5" fill="#000080"/></svg>'+
+'<span style="font-size:11px">\u2192</span>'+
+'<svg width="18" height="12" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0"><rect width="22" height="15" fill="#FFFFFF"/><rect width="22" height="3.5" y="5.75" fill="#003580"/><rect width="3.5" height="15" x="6" fill="#003580"/></svg>'+
+'</span>';
+(function navFlagLoop(){
+const el=document.getElementById('navFlagToggle');
+if(!el)return;
+let showingFlags=false;
+setInterval(function(){
+showingFlags=!showingFlags;
+el.style.opacity='0';
+setTimeout(function(){
+el.innerHTML=showingFlags?NAV_FLAGS_HTML:NAV_TEXT_HTML;
+el.style.opacity='1';
+},200);
+},2800);
+el.style.transition='opacity .2s ease';
+})();
