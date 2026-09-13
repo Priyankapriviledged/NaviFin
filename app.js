@@ -9,7 +9,7 @@ const SUPABASE_ANON_KEY='YOUR_ANON_KEY';
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let currentUser=null;
 function getDisplayName(){
-if(!currentUser||!currentUser.email)return 'there';
+if(!currentUser||!currentUser.email)return 'Arun';
 const local=currentUser.email.split('@')[0];
 const first=local.split(/[.\-_0-9]+/)[0]||local;
 return first.charAt(0).toUpperCase()+first.slice(1);
