@@ -1,3 +1,4 @@
+
 const signinModal=document.getElementById('signinModal');function openSignin(){signinModal.classList.add('open');document.getElementById('signinError').style.display='none';document.getElementById('signinNotice').style.display='none'}function closeSignin(){signinModal.classList.remove('open')}
 const DOCUMENTS={
 Professional:[['employment-contract','Employment contract'],['residence-permit-application','Residence permit application'],['insurance-certificate','Insurance certificate'],['proof-of-address','Proof of address (for DVV)'],['passport-copy','Passport copy']],
