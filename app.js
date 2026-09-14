@@ -230,7 +230,7 @@ const phases=[
 ['Settle in','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>']
 ];
 return phases.map(ph=>{
-return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px;border-radius:50%;background:#E9F0FA;display:flex;align-items:center;justify-content:center;margin:0 auto 4px">'+ph[1]+'</div><p style="font-size:10px;margin:0;color:var(--muted)">'+ph[0]+'</p></div>';
+return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px;border-radius:50%;background:#E9F0FA;display:flex;align-items:center;justify-content:center;margin:0 auto 4px">'+ph[1]+'</div><p style="font-size:12px;font-weight:700;margin:0;color:var(--ink)">'+ph[0]+'</p></div>';
 }).join('');
 }
 function buildDocumentList(t){
