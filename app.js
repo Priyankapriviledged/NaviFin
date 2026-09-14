@@ -5,7 +5,7 @@ Professional:[['employment-contract','Employment contract'],['residence-permit-a
 Student:[['admission-letter','Admission letter'],['proof-of-funds','Proof of funds statement'],['insurance-certificate','Insurance certificate'],['passport-copy','Passport copy']],
 Researcher:[['hosting-agreement','Hosting agreement'],['salary-confirmation','Salary confirmation letter'],['passport-copy','Passport copy']]
 };
-const SUPABASE_URL='https://stwkqhigavdasqknjtmg.supabase.co/rest/v1/';
+const SUPABASE_URL='https://stwkqhigavdasqknjtmg.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0d2txaGlnYXZkYXNxa25qdG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNTkxODEsImV4cCI6MjEwNDgzNTE4MX0.77e2OfjYtklZ4S8gHGpIYKIPY8UwSmRyHWb48i7RgXc';
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let currentUser=null;
