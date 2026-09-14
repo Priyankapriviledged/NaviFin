@@ -4,9 +4,14 @@ Professional:[['employment-contract','Employment contract'],['residence-permit-a
 Student:[['admission-letter','Admission letter'],['proof-of-funds','Proof of funds statement'],['insurance-certificate','Insurance certificate'],['passport-copy','Passport copy']],
 Researcher:[['hosting-agreement','Hosting agreement'],['salary-confirmation','Salary confirmation letter'],['passport-copy','Passport copy']]
 };
-const SUPABASE_URL='https://YOUR_PROJECT_REF.supabase.co';
-const SUPABASE_ANON_KEY='YOUR_ANON_KEY';
-const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+let sb=null;
+if(!window.supabase||!window.supabase.createClient){
+console.error('NaviFin: The Supabase SDK failed to load (check your internet connection, ad blocker, or the CDN script tag in index.html).');
+}else if(SUPABASE_URL.includes('YOUR_PROJECT_REF')||SUPABASE_ANON_KEY.includes('YOUR_ANON_KEY')){
+console.error('NaviFin: Supabase is not configured. Open config.js and replace the placeholder SUPABASE_URL and SUPABASE_ANON_KEY with your real project values.');
+}else{
+sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+}
 let currentUser=null;
 function getDisplayName(){
 if(!currentUser||!currentUser.email)return 'Arun';
