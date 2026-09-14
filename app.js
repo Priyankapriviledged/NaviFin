@@ -65,49 +65,81 @@ document.getElementById('heroPill').textContent='';
 document.getElementById('heroProgress').style.width='0%';
 document.getElementById('heroSteps').innerHTML=[1,2,3,4].map(()=>'<div class="step"><div class="dot" style="background:#e8edf2"></div><div style="flex:1"><div style="height:12px;background:#e8edf2;border-radius:6px;width:70%;margin-bottom:6px"></div><div style="height:9px;background:#edf1f5;border-radius:6px;width:50%"></div></div></div>').join('');
 }
-function showAppTab(tab){
-document.getElementById('tabRoadmap').style.display=tab==='roadmap'?'':'none';
-document.getElementById('tabDocuments').style.display=tab==='documents'?'':'none';
-document.getElementById('tabbtn-roadmap').classList.toggle('active',tab==='roadmap');
-document.getElementById('tabbtn-documents').classList.toggle('active',tab==='documents');
-if(tab==='roadmap')updateProgress();
-}
-window.toggleStage=function(id){
-const el=document.getElementById('detail-'+id);
-if(el)el.style.display=el.style.display==='none'?'':'none';
+window.toggleChat=function(){
+document.getElementById('chatPanel').classList.toggle('open');
 };
-window.markComplete=function(id,checked){
-if(checked)completedStages.add(id);else completedStages.delete(id);
-const card=document.querySelector('.rmcard[data-stage="'+id+'"]');
-if(card)card.classList.toggle('done',checked);
+let currentStages=[],currentView='stage-0';
+function renderSidebar(stages){
+let html='';
+let lastGroup=null,groupIndex=0;
+stages.forEach((s,i)=>{
+if(s.group!==lastGroup){
+html+='<p class="sbGroupLabel">'+s.groupLabel+'</p>';
+lastGroup=s.group;
+groupIndex=0;
+}
+groupIndex++;
+const done=completedStages.has(s.key);
+const isCurrent=currentView==='stage-'+i;
+const dotClass=done?'sbDot done':(isCurrent?'sbDot current':'sbDot');
+const dotContent=done?'&#10003;':(groupIndex<10?'0'+groupIndex:groupIndex);
+html+='<div class="sbItem'+(isCurrent?' active':'')+'" onclick="selectStage('+i+')"><span class="'+dotClass+'">'+dotContent+'</span><span class="sbLabel">'+s.title+'</span></div>';
+});
+html+='<div class="sbDocLink'+(currentView==='documents'?' active':'')+'" onclick="selectDocumentsView()">Documents</div>';
+document.getElementById('appSidebar').innerHTML=html;
+}
+window.selectStage=function(i){
+currentView='stage-'+i;
+const s=currentStages[i];
+if(!s)return;
+const done=completedStages.has(s.key);
+document.getElementById('appDetail').innerHTML=
+'<p style="font-size:12px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px">'+(s.meta?s.meta:'Stage '+(i+1))+'</p>'+
+'<p style="font-size:22px;font-weight:700;color:var(--navy);margin:0 0 14px">'+s.title+'</p>'+
+'<p style="font-size:14px;color:var(--muted);margin:0 0 22px;line-height:1.6">'+s.desc+'</p>'+
+'<div style="background:var(--bg);border-radius:12px;padding:18px 20px">'+
+'<p style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Checklist</p>'+
+'<ul style="margin:0 0 16px;padding-left:18px;font-size:13px;color:var(--ink);line-height:1.9">'+s.checklist.map(c=>'<li>'+c+'</li>').join('')+'</ul>'+
+'<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#087c6d;cursor:pointer"><input type="checkbox" '+(done?'checked':'')+' onchange="markComplete(\''+s.key+'\',this.checked)"> Mark complete</label>'+
+'</div>';
+renderSidebar(currentStages);
+};
+window.markComplete=function(key,checked){
+if(checked)completedStages.add(key);else completedStages.delete(key);
+renderSidebar(currentStages);
 updateProgress();
 };
 function updateProgress(){
-const activeGrid=currentPersona==='Professional'?document.getElementById('fullRoadmapInner'):document.getElementById('simpleTaskCards');
-const badge=document.getElementById('taskProgressBadge');
-if(!activeGrid){badge.style.display='none';return}
-const total=activeGrid.querySelectorAll('.rmcard').length;
-const done=activeGrid.querySelectorAll('.rmcard.done').length;
-if(total>0){badge.style.display='inline';badge.textContent=' ('+done+'/'+total+')';}
-else{badge.style.display='none';}
+const total=currentStages.length;
+const done=currentStages.filter(s=>completedStages.has(s.key)).length;
+const pill=document.getElementById('appHeaderPill');
+if(pill)pill.textContent=total>0?done+'/'+total+' complete':'';
 }
 function resetProgress(){
 completedStages=new Set();
-document.querySelectorAll('.rmcard').forEach(c=>c.classList.remove('done'));
-document.querySelectorAll('.rmdetail').forEach(d=>d.style.display='none');
-document.querySelectorAll('.rmcomplete input[type=checkbox]').forEach(cb=>cb.checked=false);
 }
-function buildSimpleTaskCards(tasks){
-return tasks.map((x,i)=>{
-const id='simple-'+i;
-return '<div class="rmcard pre" data-stage="'+id+'" onclick="toggleStage(\''+id+'\')" style="margin-bottom:12px">'+
-'<p class="rmtitle">'+x[1]+'</p>'+
-'<p class="rmdesc">'+x[2]+'</p>'+
-'<div class="rmdetail" id="detail-'+id+'" style="display:none" onclick="event.stopPropagation()">'+
-'<ul class="rmchecklist"><li>'+x[2]+'</li></ul>'+
-'<label class="rmcomplete"><input type="checkbox" '+(x[0]?'checked':'')+' onchange="markComplete(\''+id+'\',this.checked)"> Mark complete</label>'+
-'</div></div>';
-}).join('');
+function buildSimpleStages(tasks){
+return tasks.map((x,i)=>({key:'simple-'+i,group:'main',groupLabel:'Your tasks',meta:'',title:x[1],desc:x[2],checklist:[x[2]]}));
+}
+function buildProfessionalStages(family){
+let stage5Desc='Housing support.';
+if(family&&family.living&&family.living!=='alone'){
+if(family.family==='spouse')stage5Desc='Housing support and spouse settling-in.';
+else stage5Desc='Housing support, spouse settling-in, and school & daycare research for children aged '+(family.ages||[]).join(', ')+'.';
+}
+return[
+{key:'pre-1',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Relocation start',desc:'GDPR consent, questionnaire, pre-consultation if needed',checklist:['Give GDPR consent to your relocation provider','Complete the intake questionnaire','Book a pre-consultation call if you have questions']},
+{key:'pre-2',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Immigration',desc:'Residence permit application, employer-sponsored',checklist:['Confirm your permit basis with your employer','Submit residence permit application or EU registration','Prepare supporting documents Migri requests']},
+{key:'pre-3',group:'pre',groupLabel:'Pre-arrival preparations',meta:'1–3 months',title:'Permit decision & cards',desc:'Book flights only after receiving the cards',checklist:['Track your application status','Receive your decision and residence permit cards','Only then book flight tickets']},
+{key:'pre-4',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Pre-arrival call',desc:'With a local relocation consultant',checklist:['Schedule your pre-arrival consultation','Review arrival logistics and open questions']},
+{key:'pre-5',group:'pre',groupLabel:'Pre-arrival preparations',meta:'on arrival',title:'Destination services',desc:stage5Desc,checklist:[stage5Desc]},
+{key:'post-1',group:'post',groupLabel:'After arrival',meta:'1–4 days',title:'Local registration (DVV)',desc:'Finnish ID number, healthcare eligibility, address registration',checklist:['Book a DVV appointment or visit a service point','Bring passport and residence permit card','Receive your Finnish personal ID number']},
+{key:'post-2',group:'post',groupLabel:'After arrival',meta:'after ID',title:'Tax card',desc:'Required before your first payroll run',checklist:['Apply for your tax card via Vero','Share it with your employer before payroll']},
+{key:'post-3',group:'post',groupLabel:'After arrival',meta:'3–4 months',title:'Social security (Kela)',desc:'Apply as soon as your ID number is ready',checklist:['Submit your Kela application','Expect 3–4 months processing time']},
+{key:'post-4',group:'post',groupLabel:'After arrival',meta:'7–14 days',title:'Bank account',desc:'Needs a registered address from DVV first',checklist:['Book a bank appointment after DVV registration','Bring ID and proof of address']},
+{key:'post-5',group:'post',groupLabel:'After arrival',meta:'parallel',title:'Home search',desc:'More options open up once your ID number is issued',checklist:['Start browsing while your permit is processing','More listings available once you have a Finnish ID']},
+{key:'post-6',group:'post',groupLabel:'After arrival',meta:'ongoing',title:'Enjoy Finland',desc:'Update your bank details with Kela and tax office · don\u2019t forget the sauna',checklist:['Update bank details with Kela and tax office','Settle into everyday life']}
+];
 }
 function studentOverride(family){
 if(!family||!family.living){return{}}
@@ -157,26 +189,12 @@ document.getElementById('heroProgress').style.width=p.progress+'%';
 document.getElementById('heroSteps').innerHTML=steps.map(s=>'<div class="step"><div class="dot '+s[0]+'">'+s[1]+'</div><div><strong>'+s[2]+'</strong><br><small>'+s[3]+'</small></div></div>').join('');
 document.getElementById('appHeaderName').textContent=getDisplayName()+"’s Finland roadmap";
 document.getElementById('appHeaderSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
-document.getElementById('appHeaderPill').textContent=p.progress+'% ready';
 document.getElementById('appHeaderProgress').style.width=p.progress+'%';
 document.getElementById('appHeaderPhases').innerHTML=buildPhaseTracker();
 ['Student','Researcher','Professional'].forEach(k=>document.getElementById('persona-card-'+k).classList.toggle('active',k===t));
-const fri=document.getElementById('fullRoadmapInner'),stc=document.getElementById('simpleTaskCards');
-if(t==='Professional'){
-fri.style.display='';
-stc.style.display='none';
-const s5=document.getElementById('fr-stage5');
-if(!family||!family.living||family.living==='alone'){s5.textContent='Housing support.'}
-else if(family.family==='spouse'){s5.textContent='Housing support and spouse settling-in.'}
-else{s5.textContent='Housing support, spouse settling-in, and school & daycare research for children aged '+(family.ages||[]).join(', ')+'.'}
-}else{
-fri.style.display='none';
-stc.style.display='';
-stc.innerHTML=buildSimpleTaskCards(tasks);
-}
-document.getElementById('documentList').innerHTML=buildDocumentList(t);
-refreshDocumentStatuses();
-showAppTab('roadmap');
+currentStages=t==='Professional'?buildProfessionalStages(family):buildSimpleStages(tasks);
+currentView='stage-0';
+selectStage(0);
 updateProgress();
 }
 function selectPersona(t){openSignin()}
@@ -202,6 +220,15 @@ return '<div class="docRow" data-key="'+key+'" style="display:flex;justify-conte
 '</div></div>';
 }).join('');
 }
+window.selectDocumentsView=function(){
+currentView='documents';
+document.getElementById('appDetail').innerHTML=
+'<p style="font-size:22px;font-weight:700;color:var(--navy);margin:0 0 8px">Documents</p>'+
+'<p style="font-size:14px;color:var(--muted);margin:0 0 22px">Documents that come up across your roadmap, in one place.</p>'+
+'<div id="documentList">'+buildDocumentList(currentPersona)+'</div>';
+refreshDocumentStatuses();
+renderSidebar(currentStages);
+};
 let docPathMap={};
 async function refreshDocumentStatuses(){
 if(!currentUser||!sb)return;
