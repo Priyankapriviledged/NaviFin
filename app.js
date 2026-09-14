@@ -211,6 +211,7 @@ document.getElementById('heroProgress').style.width=p.progress+'%';
 document.getElementById('heroSteps').innerHTML=steps.map(s=>'<div class="step"><div class="dot '+s[0]+'">'+s[1]+'</div><div><strong>'+s[2]+'</strong><br><small>'+s[3]+'</small></div></div>').join('');
 document.getElementById('appHeaderName').textContent=getDisplayName()+"’s Finland roadmap";
 document.getElementById('appHeaderSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
+document.getElementById('editDetailsLink').style.display=(t==='Student'||t==='Professional')?'inline-block':'none';
 document.getElementById('appHeaderProgress').style.width=p.progress+'%';
 document.getElementById('appHeaderPhases').innerHTML=buildPhaseTracker();
 ['Student','Researcher','Professional'].forEach(k=>document.getElementById('persona-card-'+k).classList.toggle('active',k===t));
@@ -222,7 +223,7 @@ updateProgress();
 function selectPersona(t){openSignin()}
 renderPersona('Student');
 function buildPhaseTracker(){
-const phases=[['✓','Explore','done'],['✓','Apply','done'],['3','Travel','current'],['4','Activate',''],['5','Integrate','']];
+const phases=[['✓','Prepare','done'],['✓','Apply','done'],['3','Travel','current'],['4','Register',''],['5','Settle in','']];
 return phases.map(ph=>{
 const circleStyle=ph[2]==='done'?'background:#dff7f1;color:#087c6d':ph[2]==='current'?'background:var(--blue);color:#fff':'background:#E9F0FA;color:var(--blue)';
 const labelStyle=ph[2]==='current'?'color:var(--ink);font-weight:500':'color:var(--muted)';
