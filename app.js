@@ -195,28 +195,44 @@ return docs.map(d=>{
 const[key,name]=d;
 return '<div class="docRow" data-key="'+key+'" style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px">'+
 '<div><p style="margin:0;font-size:14px;font-weight:500">'+name+'</p></div>'+
-'<div style="display:flex;align-items:center;gap:10px">'+
+'<div class="docActions" style="display:flex;align-items:center;gap:10px">'+
 '<span class="docStatus" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:#f6f8fb;color:var(--muted)">Checking\u2026</span>'+
+'<button class="btn secondary docViewBtn" style="padding:6px 12px;font-size:12px;display:none" onclick="viewDocument(\''+key+'\')">View</button>'+
 '<button class="btn secondary docUploadBtn" style="padding:6px 12px;font-size:12px" onclick="triggerUpload(\''+key+'\',\''+name.replace(/'/g,"\\'")+'\')">Upload</button>'+
 '</div></div>';
 }).join('');
 }
+let docPathMap={};
 async function refreshDocumentStatuses(){
 if(!currentUser||!sb)return;
-const{data,error}=await sb.from('documents').select('doc_key,status').eq('user_id',currentUser.id);
+const{data,error}=await sb.from('documents').select('doc_key,status,file_path').eq('user_id',currentUser.id);
 const statusMap={};
-if(data)data.forEach(r=>{statusMap[r.doc_key]=r.status});
+docPathMap={};
+if(data)data.forEach(r=>{statusMap[r.doc_key]=r.status;docPathMap[r.doc_key]=r.file_path});
 document.querySelectorAll('.docRow').forEach(row=>{
 const key=row.getAttribute('data-key');
 const status=statusMap[key]||'Not uploaded';
 const done=status==='Uploaded';
-const badge=row.querySelector('.docStatus'),uploadBtn=row.querySelector('.docUploadBtn');
+const badge=row.querySelector('.docStatus'),uploadBtn=row.querySelector('.docUploadBtn'),viewBtn=row.querySelector('.docViewBtn');
 badge.textContent=status;
 badge.style.background=done?'#e8f8f4':'#f6f8fb';
 badge.style.color=done?'#087c6d':'var(--muted)';
-if(uploadBtn)uploadBtn.style.display=done?'none':'inline-block';
+if(uploadBtn)uploadBtn.textContent=done?'Replace':'Upload';
+if(viewBtn)viewBtn.style.display=done?'inline-block':'none';
 });
 }
+window.viewDocument=async function(key){
+if(!sb||!currentUser)return;
+const path=docPathMap[key];
+if(!path)return;
+const{data,error}=await sb.storage.from('documents').createSignedUrl(path,300);
+if(error||!data){
+console.error('Could not create signed URL:',error);
+alert("Sorry, couldn't open that file right now. Please try again.");
+return;
+}
+window.open(data.signedUrl,'_blank');
+};
 let pendingUploadKey=null,pendingUploadName=null;
 window.triggerUpload=function(key,name){
 pendingUploadKey=key;pendingUploadName=name;
