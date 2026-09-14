@@ -232,6 +232,7 @@ const badge=row?row.querySelector('.docStatus'):null;
 if(badge)badge.textContent='Uploading\u2026';
 const{error:uploadError}=await sb.storage.from('documents').upload(path,file);
 if(uploadError){
+console.error('Document storage upload failed:',uploadError);
 if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
 return;
 }
