@@ -295,13 +295,18 @@ if(uploadError){
 if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
 return;
 }
-await sb.from('documents').upsert({
+const{error:dbError}=await sb.from('documents').upsert({
 user_id:currentUser.id,
 doc_key:pendingUploadKey,
 doc_name:pendingUploadName,
 file_path:path,
 status:'Uploaded'
 },{onConflict:'user_id,doc_key'});
+if(dbError){
+console.error('Document DB write failed:',dbError);
+if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
+return;
+}
 refreshDocumentStatuses();
 };
 let authMode='signin';

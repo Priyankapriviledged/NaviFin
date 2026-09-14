@@ -1,12 +1,11 @@
-
 const signinModal=document.getElementById('signinModal');function openSignin(){signinModal.classList.add('open');document.getElementById('signinError').style.display='none';document.getElementById('signinNotice').style.display='none'}function closeSignin(){signinModal.classList.remove('open')}
 const DOCUMENTS={
 Professional:[['employment-contract','Employment contract'],['residence-permit-application','Residence permit application'],['insurance-certificate','Insurance certificate'],['proof-of-address','Proof of address (for DVV)'],['passport-copy','Passport copy']],
 Student:[['admission-letter','Admission letter'],['proof-of-funds','Proof of funds statement'],['insurance-certificate','Insurance certificate'],['passport-copy','Passport copy']],
 Researcher:[['hosting-agreement','Hosting agreement'],['salary-confirmation','Salary confirmation letter'],['passport-copy','Passport copy']]
 };
-const SUPABASE_URL='https://stwkqhigavdasqknjtmg.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0d2txaGlnYXZkYXNxa25qdG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNTkxODEsImV4cCI6MjEwNDgzNTE4MX0.77e2OfjYtklZ4S8gHGpIYKIPY8UwSmRyHWb48i7RgXc';
+const SUPABASE_URL='https://YOUR_PROJECT_REF.supabase.co';
+const SUPABASE_ANON_KEY='YOUR_ANON_KEY';
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let currentUser=null;
 function getDisplayName(){
@@ -231,13 +230,18 @@ if(uploadError){
 if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
 return;
 }
-await sb.from('documents').upsert({
+const{error:dbError}=await sb.from('documents').upsert({
 user_id:currentUser.id,
 doc_key:pendingUploadKey,
 doc_name:pendingUploadName,
 file_path:path,
 status:'Uploaded'
 },{onConflict:'user_id,doc_key'});
+if(dbError){
+console.error('Document DB write failed:',dbError);
+if(badge){badge.textContent='Upload failed';badge.style.background='#fdf2e5';badge.style.color='#854f0b';}
+return;
+}
 refreshDocumentStatuses();
 };
 let authMode='signin';
