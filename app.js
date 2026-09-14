@@ -212,7 +212,6 @@ document.getElementById('heroSteps').innerHTML=steps.map(s=>'<div class="step"><
 document.getElementById('appHeaderName').textContent=getDisplayName()+"’s Finland roadmap";
 document.getElementById('appHeaderSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
 document.getElementById('editDetailsLink').style.display=(t==='Student'||t==='Professional')?'inline-block':'none';
-document.getElementById('appHeaderProgress').style.width=p.progress+'%';
 document.getElementById('appHeaderPhases').innerHTML=buildPhaseTracker();
 ['Student','Researcher','Professional'].forEach(k=>document.getElementById('persona-card-'+k).classList.toggle('active',k===t));
 currentStages=t==='Professional'?buildProfessionalStages(family):buildSimpleStages(tasks);
@@ -223,11 +222,15 @@ updateProgress();
 function selectPersona(t){openSignin()}
 renderPersona('Student');
 function buildPhaseTracker(){
-const phases=[['✓','Prepare','done'],['✓','Apply','done'],['3','Travel','current'],['4','Register',''],['5','Settle in','']];
+const phases=[
+['Prepare','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1M9 11h6M9 15h6"/></svg>'],
+['Apply','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>'],
+['Travel','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><path d="M2 16l20-8-8 20-3-9-9-3z"/></svg>'],
+['Register','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h5M14 14h3"/></svg>'],
+['Settle in','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0047BA" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>']
+];
 return phases.map(ph=>{
-const circleStyle=ph[2]==='done'?'background:#dff7f1;color:#087c6d':ph[2]==='current'?'background:var(--blue);color:#fff':'background:#E9F0FA;color:var(--blue)';
-const labelStyle=ph[2]==='current'?'color:var(--ink);font-weight:500':'color:var(--muted)';
-return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px;border-radius:50%;'+circleStyle+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 4px">'+ph[0]+'</div><p style="font-size:10px;margin:0;'+labelStyle+'">'+ph[1]+'</p></div>';
+return '<div style="flex:1;text-align:center"><div style="width:24px;height:24px;border-radius:50%;background:#E9F0FA;display:flex;align-items:center;justify-content:center;margin:0 auto 4px">'+ph[1]+'</div><p style="font-size:10px;margin:0;color:var(--muted)">'+ph[0]+'</p></div>';
 }).join('');
 }
 function buildDocumentList(t){
