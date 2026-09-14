@@ -93,21 +93,43 @@ currentView='stage-'+i;
 const s=currentStages[i];
 if(!s)return;
 const done=completedStages.has(s.key);
-document.getElementById('appDetail').innerHTML=
-'<p style="font-size:12px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px">'+(s.meta?s.meta:'Stage '+(i+1))+'</p>'+
+let html='<p style="font-size:12px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px">'+(s.meta?s.meta:'Stage '+(i+1))+'</p>'+
 '<p style="font-size:22px;font-weight:700;color:var(--navy);margin:0 0 14px">'+s.title+'</p>'+
 '<p style="font-size:14px;color:var(--muted);margin:0 0 22px;line-height:1.6">'+s.desc+'</p>'+
-'<div style="background:var(--bg);border-radius:12px;padding:18px 20px">'+
+'<div style="background:var(--bg);border-radius:12px;padding:18px 20px;margin-bottom:16px">'+
 '<p style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px">Checklist</p>'+
-'<ul style="margin:0 0 16px;padding-left:18px;font-size:13px;color:var(--ink);line-height:1.9">'+s.checklist.map(c=>'<li>'+c+'</li>').join('')+'</ul>'+
-'<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#087c6d;cursor:pointer"><input type="checkbox" '+(done?'checked':'')+' onchange="markComplete(\''+s.key+'\',this.checked)"> Mark complete</label>'+
+'<ul style="margin:0;padding-left:18px;font-size:13px;color:var(--ink);line-height:1.9">'+s.checklist.map(c=>'<li>'+c+'</li>').join('')+'</ul>'+
 '</div>';
+if(s.officialSource){
+const o=s.officialSource;
+html+='<div style="border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px">'+
+'<p style="font-size:16px;font-weight:700;color:var(--navy);margin:0 0 16px">Official source</p>'+
+'<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">'+
+'<div><p style="font-size:15px;font-weight:700;color:var(--navy);margin:0 0 6px">'+o.docName+'</p>'+
+'<p style="font-size:13px;color:var(--muted);margin:0">Authority: <span style="color:var(--blue);font-weight:700">'+o.authority+'</span> ('+o.authorityFull+')</p></div>'+
+'<a href="'+o.url+'" target="_blank" rel="noopener" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;white-space:nowrap">Visit official site &#8599;</a>'+
+'</div></div>';
+}
+if(s.verificationNote){
+html+='<div style="background:#fdf2e5;border-radius:10px;padding:14px 16px;margin-bottom:20px">'+
+'<p style="font-size:13px;font-weight:700;color:#854f0b;margin:0 0 4px;display:flex;align-items:center;gap:7px">'+
+'<svg width="15" height="15" viewBox="0 0 24 24" fill="#e8a33d" style="flex-shrink:0"><path d="M12 2L1 21h22L12 2zm0 6v6m0 3h.01" stroke="#fff" stroke-width="1.5" fill="#e8a33d"/></svg>'+
+'Verification required</p>'+
+'<p style="font-size:12.5px;color:#854f0b;margin:0 0 0 22px;line-height:1.6">'+s.verificationNote+'</p></div>';
+}
+html+='<button id="markCompleteBtn" onclick="markComplete(\''+s.key+'\',!'+done+')" style="width:100%;background:#087c6d;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">'+
+(done?'&#10003; Completed':'&#10003; Mark complete')+'</button>';
+document.getElementById('appDetail').innerHTML=html;
 renderSidebar(currentStages);
 };
 window.markComplete=function(key,checked){
 if(checked)completedStages.add(key);else completedStages.delete(key);
 renderSidebar(currentStages);
 updateProgress();
+if(currentView.indexOf('stage-')===0){
+const idx=parseInt(currentView.split('-')[1],10);
+if(currentStages[idx]&&currentStages[idx].key===key)selectStage(idx);
+}
 };
 function updateProgress(){
 const total=currentStages.length;
@@ -129,7 +151,7 @@ else stage5Desc='Housing support, spouse settling-in, and school & daycare resea
 }
 return[
 {key:'pre-1',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Relocation start',desc:'GDPR consent, questionnaire, pre-consultation if needed',checklist:['Give GDPR consent to your relocation provider','Complete the intake questionnaire','Book a pre-consultation call if you have questions']},
-{key:'pre-2',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Immigration',desc:'Residence permit application, employer-sponsored',checklist:['Confirm your permit basis with your employer','Submit residence permit application or EU registration','Prepare supporting documents Migri requests']},
+{key:'pre-2',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Immigration',desc:'Residence permit application, employer-sponsored',checklist:['Confirm your permit basis with your employer','Submit residence permit application','Prepare supporting documents Migri requests'],officialSource:{docName:'Apply for residence permit',authority:'Migri',authorityFull:'Finnish Immigration Service',url:'https://migri.fi/en/i-want-a-residence-permit'},verificationNote:'Requirements can change. Always confirm the current process directly with Migri before you apply.'},
 {key:'pre-3',group:'pre',groupLabel:'Pre-arrival preparations',meta:'1–3 months',title:'Permit decision & cards',desc:'Book flights only after receiving the cards',checklist:['Track your application status','Receive your decision and residence permit cards','Only then book flight tickets']},
 {key:'pre-4',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Pre-arrival call',desc:'With a local relocation consultant',checklist:['Schedule your pre-arrival consultation','Review arrival logistics and open questions']},
 {key:'pre-5',group:'pre',groupLabel:'Pre-arrival preparations',meta:'on arrival',title:'Destination services',desc:stage5Desc,checklist:[stage5Desc]},
