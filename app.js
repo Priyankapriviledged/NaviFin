@@ -19,6 +19,12 @@ const local=currentUser.email.split('@')[0];
 const first=local.split(/[.\-_0-9]+/)[0]||local;
 return first.charAt(0).toUpperCase()+first.slice(1);
 }
+function firstNameOf(family){
+if(family&&family.name&&family.name.trim())return family.name.trim().split(/\s+/)[0];
+return getDisplayName();
+}
+const CITY_OPTIONS=['Espoo','Helsinki','Vantaa','Tampere','Oulu','Turku','Jyv\u00e4skyl\u00e4','Other city in Finland'];
+const NATIONALITIES=['Afghan','Albanian','Algerian','American','Andorran','Angolan','Argentine','Armenian','Australian','Austrian','Azerbaijani','Bahamian','Bahraini','Bangladeshi','Barbadian','Belarusian','Belgian','Belizean','Beninese','Bhutanese','Bolivian','Bosnian','Brazilian','British','Bruneian','Bulgarian','Burkinabe','Burmese','Burundian','Cambodian','Cameroonian','Canadian','Cape Verdean','Chadian','Chilean','Chinese','Colombian','Comoran','Congolese','Costa Rican','Croatian','Cuban','Cypriot','Czech','Danish','Djiboutian','Dominican','Dutch','East Timorese','Ecuadorian','Egyptian','Emirati','English','Equatorial Guinean','Eritrean','Estonian','Ethiopian','Fijian','Filipino','Finnish','French','Gabonese','Gambian','Georgian','German','Ghanaian','Greek','Grenadian','Guatemalan','Guinean','Guyanese','Haitian','Honduran','Hungarian','Icelandic','Indian','Indonesian','Iranian','Iraqi','Irish','Israeli','Italian','Ivorian','Jamaican','Japanese','Jordanian','Kazakhstani','Kenyan','Kiribati','Kuwaiti','Kyrgyz','Lao','Latvian','Lebanese','Liberian','Libyan','Liechtensteiner','Lithuanian','Luxembourgish','Macedonian','Malagasy','Malawian','Malaysian','Maldivian','Malian','Maltese','Mauritanian','Mauritian','Mexican','Micronesian','Moldovan','Monacan','Mongolian','Montenegrin','Moroccan','Mozambican','Namibian','Nauruan','Nepalese','New Zealander','Nicaraguan','Nigerian','Nigerien','North Korean','Norwegian','Omani','Pakistani','Palauan','Palestinian','Panamanian','Papua New Guinean','Paraguayan','Peruvian','Polish','Portuguese','Qatari','Romanian','Russian','Rwandan','Saint Lucian','Salvadoran','Samoan','Saudi Arabian','Scottish','Senegalese','Serbian','Seychellois','Sierra Leonean','Singaporean','Slovak','Slovenian','Solomon Islander','Somali','South African','South Korean','South Sudanese','Spanish','Sri Lankan','Sudanese','Surinamese','Swazi','Swedish','Swiss','Syrian','Taiwanese','Tajik','Tanzanian','Thai','Togolese','Tongan','Trinidadian','Tunisian','Turkish','Turkmen','Tuvaluan','Ugandan','Ukrainian','Uruguayan','Uzbekistani','Vanuatuan','Venezuelan','Vietnamese','Welsh','Yemeni','Zambian','Zimbabwean'];
 const familyModal=document.getElementById('familyModal');
 const PERSONAS={
 Student:{name:'Meera',sub:'Student · Helsinki',progress:42,
@@ -155,9 +161,9 @@ return[
 {key:'pre-3',group:'pre',groupLabel:'Pre-arrival preparations',meta:'1–3 months',title:'Permit decision & cards',desc:'Book flights only after receiving the cards',checklist:['Track your application status','Receive your decision and residence permit cards','Only then book flight tickets']},
 {key:'pre-4',group:'pre',groupLabel:'Pre-arrival preparations',meta:'',title:'Pre-arrival call',desc:'With a local relocation consultant',checklist:['Schedule your pre-arrival consultation','Review arrival logistics and open questions']},
 {key:'pre-5',group:'pre',groupLabel:'Pre-arrival preparations',meta:'on arrival',title:'Destination services',desc:stage5Desc,checklist:[stage5Desc]},
-{key:'post-1',group:'post',groupLabel:'After arrival',meta:'1–4 days',title:'Local registration (DVV)',desc:'Finnish ID number, healthcare eligibility, address registration',checklist:['Book a DVV appointment or visit a service point','Bring passport and residence permit card','Receive your Finnish personal ID number']},
-{key:'post-2',group:'post',groupLabel:'After arrival',meta:'after ID',title:'Tax card',desc:'Required before your first payroll run',checklist:['Apply for your tax card via Vero','Share it with your employer before payroll']},
-{key:'post-3',group:'post',groupLabel:'After arrival',meta:'3–4 months',title:'Social security (Kela)',desc:'Apply as soon as your ID number is ready',checklist:['Submit your Kela application','Expect 3–4 months processing time']},
+{key:'post-1',group:'post',groupLabel:'After arrival',meta:'1–4 days',title:'Local registration (DVV)',desc:'Finnish ID number, healthcare eligibility, address registration',checklist:['Book a DVV appointment or visit a service point','Bring passport and residence permit card','Receive your Finnish personal ID number'],officialSource:{docName:'Get a personal identity code from DVV',authority:'DVV',authorityFull:'Digital and Population Data Services',url:'https://dvv.fi/en/personal-identity-code'},verificationNote:'Requirements can change. Always confirm the current process directly with DVV before you register.'},
+{key:'post-2',group:'post',groupLabel:'After arrival',meta:'after ID',title:'Tax card',desc:'Required before your first payroll run',checklist:['Apply for your tax card via Vero','Share it with your employer before payroll'],officialSource:{docName:'Register with Finnish Tax Authority',authority:'Vero',authorityFull:'Finnish Tax Administration',url:'https://www.vero.fi/en/individuals/'},verificationNote:'Requirements can change. Always confirm the current process directly with Vero before you register.'},
+{key:'post-3',group:'post',groupLabel:'After arrival',meta:'3–4 months',title:'Social security (Kela)',desc:'Apply as soon as your ID number is ready',checklist:['Submit your Kela application','Expect 3–4 months processing time'],officialSource:{docName:'Apply for Kela card',authority:'Kela',authorityFull:'Social Insurance Institution of Finland',url:'https://www.kela.fi/ulkomailta-suomeen'},verificationNote:'Requirements can change. Always confirm the current process directly with Kela before you apply.'},
 {key:'post-4',group:'post',groupLabel:'After arrival',meta:'7–14 days',title:'Bank account',desc:'Needs a registered address from DVV first',checklist:['Book a bank appointment after DVV registration','Bring ID and proof of address']},
 {key:'post-5',group:'post',groupLabel:'After arrival',meta:'parallel',title:'Home search',desc:'More options open up once your ID number is issued',checklist:['Start browsing while your permit is processing','More listings available once you have a Finnish ID']},
 {key:'post-6',group:'post',groupLabel:'After arrival',meta:'ongoing',title:'Enjoy Finland',desc:'Update your bank details with Kela and tax office · don\u2019t forget the sauna',checklist:['Update bank details with Kela and tax office','Settle into everyday life']}
@@ -201,17 +207,23 @@ function renderPersona(t,family){
 resetProgress();
 currentPersona=t;const p=PERSONAS[t];
 const o=t==='Professional'?professionalOverride(family):t==='Student'?studentOverride(family):{};
-const sub=o.sub||p.sub;
+let sub=o.sub||p.sub;
+if(family&&family.city){
+const parts=sub.split(' · ');
+parts[parts.length-1]=family.city;
+sub=parts.join(' · ');
+}
 const steps=o.step3?[p.steps[0],p.steps[1],o.step3,p.steps[3]]:p.steps;
 const tasks=o.tasks||p.tasks;
-document.getElementById('heroName').textContent=getDisplayName()+"’s Finland roadmap";
+const displayName=firstNameOf(family);
+document.getElementById('heroName').textContent=displayName+"’s Finland roadmap";
 document.getElementById('heroSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
 document.getElementById('heroPill').textContent=p.progress+'% ready';
 document.getElementById('heroProgress').style.width=p.progress+'%';
 document.getElementById('heroSteps').innerHTML=steps.map(s=>'<div class="step"><div class="dot '+s[0]+'">'+s[1]+'</div><div><strong>'+s[2]+'</strong><br><small>'+s[3]+'</small></div></div>').join('');
-document.getElementById('appHeaderName').textContent=getDisplayName()+"’s Finland roadmap";
+document.getElementById('appHeaderName').textContent=displayName+"’s Finland roadmap";
 document.getElementById('appHeaderSub').textContent=t+' · '+sub.split(' · ').slice(1).join(' · ');
-document.getElementById('editDetailsLink').style.display=(t==='Student'||t==='Professional')?'inline-block':'none';
+document.getElementById('editDetailsLink').style.display='inline-block';
 document.getElementById('appHeaderPhases').innerHTML=buildPhaseTracker();
 ['Student','Researcher','Professional'].forEach(k=>document.getElementById('persona-card-'+k).classList.toggle('active',k===t));
 currentStages=t==='Professional'?buildProfessionalStages(family):buildSimpleStages(tasks);
@@ -378,14 +390,14 @@ btn.disabled=false;btn.style.opacity='1';
 signinModal.addEventListener('click',e=>{if(e.target===signinModal)closeSignin()});
 const modal=document.getElementById('modal');function openOnboard(){modal.classList.add('open')}function closeOnboard(){modal.classList.remove('open')}
 function choose(t){
-if(t==='Professional'||t==='Student'){closeOnboard();openFamilyQuestionnaire(t);return}
-renderPersona(t);setBlur(false);showApp();const r=document.getElementById('result');r.style.display='block';r.innerHTML='<strong>'+t+' roadmap created.</strong><br>Next steps are prioritised around eligibility, documents, arrival and settling in.';setTimeout(closeOnboard,1300)
+closeOnboard();openFamilyQuestionnaire(t);
 }
 
 const famBox=document.getElementById('famWrap');
 const famProg=document.getElementById('famProgress');
 let famAnswers={};
 let famPersona='Professional';
+let famHistory=[];
 
 function famDrawProgress(step,total){
 famProg.innerHTML='';
@@ -396,44 +408,139 @@ famProg.appendChild(d);
 }
 }
 function famHeader(){
-const first=getDisplayName();
+const first=firstNameOf(famAnswers);
 return '<p style="font-size:20px;font-weight:500;margin:0 0 6px;">Hi '+first+', let us personalise your roadmap</p><p style="font-size:14px;color:#617387;margin:0 0 20px;line-height:1.6;">A few quick questions so we can tailor your tasks, timelines and family-related steps.</p>';
+}
+function famBackLink(){
+return '<a href="#" onclick="event.preventDefault();famGoBack()" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#617387;font-weight:600;text-decoration:none;margin-bottom:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#617387" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>Back</a>';
 }
 function famOptionBtn(label,handler){
 return '<button onclick="'+handler+'" style="width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:15px;padding:15px 16px;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:10px;">'+label+'</button>';
 }
+function isResearcher(){return famPersona==='Researcher'}
+
 function openFamilyQuestionnaire(personaKey){
 setBlur(true);
 famPersona=personaKey;
 famAnswers={};
+famHistory=[];
 familyModal.classList.add('open');
-famDrawProgress(0,1);
-famBox.innerHTML=famHeader()+
+famRenderStep('name');
+}
+window.famGoBack=function(){
+famHistory.pop();
+const prev=famHistory.pop();
+if(!prev){
+familyModal.classList.remove('open');
+openOnboard();
+return;
+}
+famRenderStep(prev);
+};
+function famRenderStep(name){
+famHistory.push(name);
+if(name==='name')famRenderName();
+else if(name==='nationality')famRenderNationality();
+else if(name==='city')famRenderCity();
+else if(name==='living')famRenderLiving();
+else if(name==='familytype')famRenderFamilyType();
+else if(name==='kids')famRenderKids();
+}
+
+function famRenderName(){
+const total=isResearcher()?3:6;
+famDrawProgress(1,total);
+famBox.innerHTML=famBackLink()+famHeader()+
 '<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 1</p>'+
+'<p style="font-size:15px;font-weight:500;margin:0 0 14px;">Your full name?</p>'+
+'<input id="famNameInput" placeholder="e.g. Arjun Kumar" value="'+(famAnswers.name||'')+'" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:6px;">'+
+'<p id="famNameErr" style="display:none;color:#c0392b;font-size:12px;margin:0 0 10px;">Enter your name to continue.</p>'+
+'<button onclick="famSubmitName()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:750;font-size:14px;cursor:pointer;margin-top:8px;">Continue →</button>';
+}
+window.famSubmitName=function(){
+const val=document.getElementById('famNameInput').value.trim();
+const err=document.getElementById('famNameErr');
+if(!val){err.style.display='block';return}
+err.style.display='none';
+famAnswers.name=val;
+famRenderStep('nationality');
+};
+
+function famRenderNationality(){
+const total=isResearcher()?3:6;
+famDrawProgress(2,total);
+famBox.innerHTML=famBackLink()+famHeader()+
+'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 2</p>'+
+'<p style="font-size:15px;font-weight:500;margin:0 0 14px;">Your nationality?</p>'+
+'<select id="famNatInput" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:6px;background:#fff;">'+
+'<option value="">Select nationality</option>'+
+NATIONALITIES.map(n=>'<option value="'+n+'"'+(famAnswers.nationality===n?' selected':'')+'>'+n+'</option>').join('')+
+'</select>'+
+'<p id="famNatErr" style="display:none;color:#c0392b;font-size:12px;margin:0 0 10px;">Select a nationality to continue.</p>'+
+'<button onclick="famSubmitNationality()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:750;font-size:14px;cursor:pointer;margin-top:8px;">Continue →</button>';
+}
+window.famSubmitNationality=function(){
+const val=document.getElementById('famNatInput').value;
+const err=document.getElementById('famNatErr');
+if(!val){err.style.display='block';return}
+err.style.display='none';
+famAnswers.nationality=val;
+famRenderStep('city');
+};
+
+function famRenderCity(){
+const total=isResearcher()?3:6;
+famDrawProgress(3,total);
+famBox.innerHTML=famBackLink()+famHeader()+
+'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 3</p>'+
+'<p style="font-size:15px;font-weight:500;margin:0 0 14px;">Which city are you moving to?</p>'+
+'<select id="famCityInput" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:6px;background:#fff;">'+
+'<option value="">Select a city</option>'+
+CITY_OPTIONS.map(c=>'<option value="'+c+'"'+(famAnswers.city===c?' selected':'')+'>'+c+'</option>').join('')+
+'</select>'+
+'<p id="famCityErr" style="display:none;color:#c0392b;font-size:12px;margin:0 0 10px;">Select a city to continue.</p>'+
+'<button onclick="famSubmitCity()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:750;font-size:14px;cursor:pointer;margin-top:8px;">Continue →</button>';
+}
+window.famSubmitCity=function(){
+const val=document.getElementById('famCityInput').value;
+const err=document.getElementById('famCityErr');
+if(!val){err.style.display='block';return}
+err.style.display='none';
+famAnswers.city=val;
+if(isResearcher()){famDrawProgress(3,3);famFinish();}
+else{famRenderStep('living');}
+};
+
+function famRenderLiving(){
+famDrawProgress(4,6);
+famBox.innerHTML=famBackLink()+famHeader()+
+'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 4</p>'+
 '<p style="font-size:15px;font-weight:500;margin:0 0 14px;">Are you relocating alone, or with family?</p>'+
 famOptionBtn('Just me','famAnswerLiving(&quot;alone&quot;)')+
 famOptionBtn('With family','famAnswerLiving(&quot;family&quot;)');
 }
 window.famAnswerLiving=function(val){
 famAnswers.living=val;
-if(val==='alone'){famDrawProgress(1,1);famFinish()}
-else{famDrawProgress(1,3);famRenderFamilyType()}
+if(val==='alone'){famDrawProgress(4,4);famFinish()}
+else{famRenderStep('familytype')}
 };
 function famRenderFamilyType(){
-famBox.innerHTML=famHeader()+
-'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 2</p>'+
+famDrawProgress(5,6);
+famBox.innerHTML=famBackLink()+famHeader()+
+'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 5</p>'+
 '<p style="font-size:15px;font-weight:500;margin:0 0 14px;">Is it your spouse only, or kids too?</p>'+
 famOptionBtn('Spouse only','famAnswerFamily(&quot;spouse&quot;)')+
 famOptionBtn('Spouse and kids','famAnswerFamily(&quot;kids&quot;)');
 }
 window.famAnswerFamily=function(val){
 famAnswers.family=val;
-if(val==='spouse'){famDrawProgress(3,3);famFinish()}
-else{famDrawProgress(2,3);famRenderKids()}
+if(val==='spouse'){famDrawProgress(5,5);famFinish()}
+else{famRenderStep('kids')}
 };
 function famRenderKids(){
-famBox.innerHTML=famHeader()+
-'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 3</p>'+
+famDrawProgress(6,6);
+famBox.innerHTML=famBackLink()+famHeader()+
+'<p style="font-size:13px;font-weight:700;color:#617387;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Question 6</p>'+
 '<p style="font-size:15px;font-weight:500;margin:0 0 4px;">How many kids, and how old is each?</p>'+
 '<p style="font-size:13px;color:#617387;margin:0 0 14px;">This helps us bring in the right school and daycare steps at the right time.</p>'+
 '<div id="kidRows">'+
@@ -458,17 +565,23 @@ const e=document.getElementById('famAgeErr');
 if(ages.length===0){e.style.display='block';return}
 e.style.display='none';
 famAnswers.ages=ages;
-famDrawProgress(3,3);
+famDrawProgress(6,6);
 famFinish();
 };
 function famFinish(){
 let note;
-if(famAnswers.living==='alone'){note='Just you. We will keep things simple and focused on your own permit and settling-in steps.'}
-else if(famAnswers.family==='spouse'){note="You and your spouse. We will include spouse residence permit and settling-in steps."}
-else{note='You, your spouse and '+(famAnswers.ages.length>1?'kids':'a child')+' aged '+famAnswers.ages.join(', ')+'. We will include family permits, plus school and daycare steps.'}
+if(isResearcher()){
+note='Moving to '+famAnswers.city+'. We will tailor your roadmap around your research permit and settling-in steps.';
+}else if(famAnswers.living==='alone'){
+note='Just you, moving to '+famAnswers.city+'. We will keep things simple and focused on your own permit and settling-in steps.';
+}else if(famAnswers.family==='spouse'){
+note='You and your spouse, moving to '+famAnswers.city+'. We will include spouse residence permit and settling-in steps.';
+}else{
+note='You, your spouse and '+(famAnswers.ages.length>1?'kids':'a child')+' aged '+famAnswers.ages.join(', ')+', moving to '+famAnswers.city+'. We will include family permits, plus school and daycare steps.';
+}
 famBox.innerHTML='<div style="text-align:center;padding:6px 0 4px;">'+
 '<div style="width:44px;height:44px;border-radius:50%;background:#dff7f1;color:#087c6d;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 16px;">✓</div>'+
-'<p style="font-size:18px;font-weight:500;margin:0 0 8px;">Got it, thanks '+getDisplayName()+'</p>'+
+'<p style="font-size:18px;font-weight:500;margin:0 0 8px;">Got it, thanks '+firstNameOf(famAnswers)+'</p>'+
 '<p style="font-size:14px;color:#617387;line-height:1.6;margin:0 0 22px;">'+note+'</p>'+
 '<button onclick="famComplete()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:750;font-size:14px;cursor:pointer;">Build my roadmap →</button>'+
 '</div>';
